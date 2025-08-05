@@ -2,7 +2,7 @@
 
 import type { Move } from 'chess.js';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollAreaViewport } from '@/components/ui/scroll-area';
 import { History } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
@@ -36,7 +36,8 @@ export function MoveHistory({ history }: MoveHistoryProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-48 md:h-64" viewportRef={scrollAreaViewportRef}>
+                <ScrollArea className="h-48 md:h-64">
+                    <ScrollAreaViewport ref={scrollAreaViewportRef}>
                     {movePairs.length === 0 ? (
                         <p className="text-muted-foreground text-center pt-8">No moves yet.</p>
                     ) : (
@@ -50,6 +51,7 @@ export function MoveHistory({ history }: MoveHistoryProps) {
                             ))}
                         </ol>
                     )}
+                    </ScrollAreaViewport>
                 </ScrollArea>
             </CardContent>
         </Card>
