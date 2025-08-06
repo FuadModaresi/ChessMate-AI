@@ -11,7 +11,7 @@ import { MoveHistory } from '@/components/game/move-history';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Crown, Swords } from 'lucide-react';
+import { Crown, Swords, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
@@ -100,9 +100,20 @@ export default function GameClient() {
     return (
         <>
             <main className={cn(
-                "container mx-auto p-4 min-h-screen flex flex-col items-center justify-center transition-all duration-300",
+                "container mx-auto p-4 min-h-screen flex flex-col items-center justify-center transition-all duration-300 relative",
                 isFocusMode ? "p-0 md:p-4" : ""
             )}>
+                {isFocusMode && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 z-10 text-muted-foreground hover:text-foreground h-8 w-8"
+                        onClick={toggleFocusMode}
+                    >
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Exit Focus Mode</span>
+                    </Button>
+                )}
                 {!isFocusMode && (
                   <header className="text-center mb-8">
                       <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">ChessMate AI</h1>
