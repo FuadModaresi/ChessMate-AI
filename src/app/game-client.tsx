@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Chess, type Square, type Move } from 'chess.js';
+import { Chess, type Square } from 'chess.js';
 import { aiOpponentMove } from '@/ai/flows/ai-opponent-move-generation';
 import { adjustAiDifficulty } from '@/ai/flows/ai-difficulty-adjustment';
 
 import { Chessboard } from '@/components/game/chessboard';
 import { GameControls } from '@/components/game/game-controls';
-import { MoveHistory } from '@/components/game/move-history';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 export default function GameClient() {
     const { toast } = useToast();
     const [game, setGame] = useState(new Chess());
-    const [history, setHistory] = useState<Move[]>([]);
     
     const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
@@ -47,7 +45,6 @@ export default function GameClient() {
             const result = gameCopy.move(move);
             if (result) {
                 setGame(gameCopy);
-                setHistory(gameCopy.history({ verbose: true }));
                 if (gameCopy.isGameOver()) {
                     setGameOver({ isGameOver: true, reason: getGameOverReason(gameCopy) });
                 }
@@ -74,7 +71,6 @@ export default function GameClient() {
     const handleNewGame = useCallback(() => {
         const newGame = new Chess();
         setGame(newGame);
-        setHistory([]);
         setGameOver({isGameOver: false, reason: ""});
         // Keep player color and difficulty
     }, []);
@@ -211,7 +207,6 @@ export default function GameClient() {
                               onToggleFocusMode={toggleFocusMode}
                               isFocusMode={isFocusMode}
                           />
-                          <MoveHistory history={history} />
                       </div>
                     )}
                 </div>
