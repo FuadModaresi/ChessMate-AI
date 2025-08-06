@@ -17,14 +17,14 @@ export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
 export default function GameClient() {
     const [game, setGame] = useState(new Chess());
-    const [fen, setFen] = useState(game.fen());
     const [history, setHistory] = useState<Move[]>([]);
     
     const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
-    const [isAITurn, setIsAITurn] = useState(false);
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
     const [gameOver, setGameOver] = useState<{isGameOver: boolean; reason: string}>({isGameOver: false, reason: ""});
     
+    const isAITurn = useMemo(() => game.turn() !== playerColor && !gameOver.isGameOver, [game, playerColor, gameOver.isGameOver]);
+    const fen = useMemo(() => game.fen(), [game]);
     const boardOrientation = useMemo(() => playerColor === 'w' ? 'white' : 'black', [playerColor]);
 
     const getGameOverReason = useCallback((currentGame: Chess): string => {
@@ -42,14 +42,9 @@ export default function GameClient() {
             const result = gameCopy.move(move);
             if (result) {
                 setGame(gameCopy);
-                setFen(gameCopy.fen());
                 setHistory(gameCopy.history({ verbose: true }));
                 if (gameCopy.isGameOver()) {
                     setGameOver({ isGameOver: true, reason: getGameOverReason(gameCopy) });
-                } else {
-                    if (gameCopy.turn() !== playerColor) {
-                        setIsAITurn(true);
-                    }
                 }
             }
             return result;
@@ -57,20 +52,14 @@ export default function GameClient() {
             console.error("Invalid move:", error);
             return null;
         }
-    }, [game, playerColor, getGameOverReason]);
+    }, [game, getGameOverReason]);
 
     const handleNewGame = useCallback(() => {
         const newGame = new Chess();
         setGame(newGame);
-        setFen(newGame.fen());
         setHistory([]);
         setGameOver({isGameOver: false, reason: ""});
-        if(newGame.turn() === playerColor){
-            setIsAITurn(false);
-        } else {
-            setIsAITurn(true);
-        }
-    }, [playerColor]);
+    }, []);
     
     const handleDifficultyChange = useCallback(async (newDifficulty: Difficulty) => {
         setDifficulty(newDifficulty);
@@ -79,24 +68,12 @@ export default function GameClient() {
     }, [handleNewGame]);
 
     const handleSwitchSides = useCallback(() => {
-        setPlayerColor(prev => {
-            const newColor = prev === 'w' ? 'b' : 'w';
-            const newGame = new Chess();
-            setGame(newGame);
-            setFen(newGame.fen());
-            setHistory([]);
-            setGameOver({isGameOver: false, reason: ""});
-            if (newGame.turn() !== newColor) {
-                setIsAITurn(true);
-            } else {
-                setIsAITurn(false);
-            }
-            return newColor;
-        });
-    }, []);
+        setPlayerColor(prev => prev === 'w' ? 'b' : 'w');
+        handleNewGame();
+    }, [handleNewGame]);
 
     useEffect(() => {
-        if(isAITurn && !game.isGameOver() && game.turn() !== playerColor) {
+        if(isAITurn) {
             const getAIMove = async () => {
                 try {
                   const aiMove = await aiOpponentMove({ boardState: game.fen(), difficulty });
@@ -105,14 +82,12 @@ export default function GameClient() {
                   }
                 } catch(e) {
                   console.error("AI move failed", e);
-                } finally {
-                  setIsAITurn(false);
                 }
             };
             const timer = setTimeout(getAIMove, 500);
             return () => clearTimeout(timer);
         }
-    }, [isAITurn, game, difficulty, playerColor, makeMove]);
+    }, [isAITurn, game, difficulty, makeMove]);
 
     return (
         <>
@@ -130,7 +105,7 @@ export default function GameClient() {
                                     fen={fen}
                                     onMove={makeMove}
                                     orientation={boardOrientation}
-                                    isInteractable={!isAITurn && !gameOver.isGameOver && game.turn() === playerColor}
+                                    isInteractable={!isAITurn && !gameOver.isGameOver}
                                 />
                            </CardContent>
                         </Card>
