@@ -34,9 +34,11 @@ const aiOpponentMovePrompt = ai.definePrompt({
   output: {schema: AiOpponentMoveOutputSchema},
   prompt: `You are a chess grandmaster AI, playing against a human opponent.
 
+You are playing as the black pieces.
+
 You are playing at {{difficulty}} difficulty.
 
-Given the current board state in FEN notation: "{{{boardState}}}", generate the best possible chess move in UCI notation for white.
+Given the current board state in FEN notation: "{{{boardState}}}", generate the best possible chess move in UCI notation for black.
 Consider strategic advantages, piece value, and potential threats.
 Output ONLY the UCI notation, do not include any other explanations.`,
 });
@@ -49,6 +51,6 @@ const aiOpponentMoveFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await aiOpponentMovePrompt(input);
-    return output!;
+    return output ?? '';
   }
 );

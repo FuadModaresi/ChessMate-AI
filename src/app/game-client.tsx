@@ -13,10 +13,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Crown, Swords, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
 export default function GameClient() {
+    const { toast } = useToast();
     const [game, setGame] = useState(new Chess());
     const [history, setHistory] = useState<Move[]>([]);
     
@@ -49,13 +51,24 @@ export default function GameClient() {
                 if (gameCopy.isGameOver()) {
                     setGameOver({ isGameOver: true, reason: getGameOverReason(gameCopy) });
                 }
+            } else {
+                 toast({
+                    title: "Invalid Move",
+                    description: "The AI returned an invalid move. Please try again.",
+                    variant: "destructive",
+                });
             }
             return result;
         } catch (error) {
             console.error("Invalid move:", error);
+             toast({
+                title: "Invalid Move",
+                description: "The move could not be processed. Please try again.",
+                variant: "destructive",
+            });
             return null;
         }
-    }, [game, getGameOverReason]);
+    }, [game, getGameOverReason, toast]);
 
     const handleNewGame = useCallback(() => {
         const newGame = new Chess();
@@ -87,15 +100,26 @@ export default function GameClient() {
                   const aiMove = await aiOpponentMove({ boardState: game.fen(), difficulty });
                   if (aiMove) {
                       makeMove(aiMove);
+                  } else {
+                    toast({
+                        title: "AI Error",
+                        description: "The AI failed to make a move. Please try again.",
+                        variant: "destructive",
+                    });
                   }
                 } catch(e) {
                   console.error("AI move failed", e);
+                  toast({
+                    title: "AI Error",
+                    description: "An error occurred while getting the AI's move. Please try again.",
+                    variant: "destructive",
+                });
                 }
             };
             const timer = setTimeout(getAIMove, 500);
             return () => clearTimeout(timer);
         }
-    }, [isAITurn, game, difficulty, makeMove]);
+    }, [isAITurn, game, difficulty, makeMove, toast]);
 
     return (
         <>
