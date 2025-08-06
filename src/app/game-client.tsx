@@ -24,6 +24,7 @@ export default function GameClient() {
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
     const [gameOver, setGameOver] = useState<{isGameOver: boolean; reason: string}>({isGameOver: false, reason: ""});
     const [isFocusMode, setIsFocusMode] = useState(false);
+    const [lastMove, setLastMove] = useState<{ from: Square, to: Square } | null>(null);
     
     const isPlayerTurn = useMemo(() => game.turn() === playerColor, [game, playerColor]);
     const isAITurn = useMemo(() => !isPlayerTurn && !gameOver.isGameOver, [isPlayerTurn, gameOver.isGameOver]);
@@ -45,6 +46,7 @@ export default function GameClient() {
             const result = gameCopy.move(move);
             if (result) {
                 setGame(gameCopy);
+                setLastMove({ from: result.from, to: result.to });
                 if (gameCopy.isGameOver()) {
                     setGameOver({ isGameOver: true, reason: getGameOverReason(gameCopy) });
                 }
@@ -71,6 +73,7 @@ export default function GameClient() {
     const handleNewGame = useCallback(() => {
         const newGame = new Chess();
         setGame(newGame);
+        setLastMove(null);
         setGameOver({isGameOver: false, reason: ""});
         // Keep player color and difficulty
     }, []);
@@ -187,6 +190,7 @@ export default function GameClient() {
                                     onMove={makeMove}
                                     orientation={boardOrientation}
                                     isInteractable={isPlayerTurn && !gameOver.isGameOver}
+                                    lastMove={lastMove}
                                 />
                            </CardContent>
                         </Card>

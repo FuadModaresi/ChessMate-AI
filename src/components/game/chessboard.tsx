@@ -10,12 +10,13 @@ interface ChessboardProps {
     onMove: (move: { from: Square, to: Square, promotion?: string }) => void;
     orientation: 'white' | 'black';
     isInteractable: boolean;
+    lastMove?: { from: Square, to: Square } | null;
 }
 
 const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-export function Chessboard({ fen, onMove, orientation, isInteractable }: ChessboardProps) {
+export function Chessboard({ fen, onMove, orientation, isInteractable, lastMove }: ChessboardProps) {
     const [draggedPiece, setDraggedPiece] = useState<{ from: Square } | null>(null);
     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
     
@@ -71,6 +72,9 @@ export function Chessboard({ fen, onMove, orientation, isInteractable }: Chessbo
                         const fileIndex = files.indexOf(file);
                         const isLight = (rankIndex + fileIndex) % 2 !== 0;
 
+                        const isLastMoveFrom = lastMove?.from === square;
+                        const isLastMoveTo = lastMove?.to === square;
+
                         return (
                             <div
                                 key={square}
@@ -79,12 +83,16 @@ export function Chessboard({ fen, onMove, orientation, isInteractable }: Chessbo
                                     isLight ? "bg-primary/80" : "bg-secondary",
                                     selectedSquare === square && "bg-accent/70",
                                     draggedPiece && draggedPiece.from === square && "bg-accent/50",
-                                    draggedPiece && draggedPiece.from !== square && "hover:bg-accent/30"
+                                    draggedPiece && draggedPiece.from !== square && "hover:bg-accent/30",
+                                    (isLastMoveFrom || isLastMoveTo) && "relative"
                                 )}
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={() => handleDrop(square)}
                                 onClick={() => handleSquareClick(square)}
                             >
+                                {(isLastMoveFrom || isLastMoveTo) && (
+                                     <div className="absolute inset-0 ring-4 ring-accent/80 ring-offset-0 animate-pulse rounded-md" />
+                                )}
                                 {piece && (
                                     <Piece
                                         piece={piece}
