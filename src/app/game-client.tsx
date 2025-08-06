@@ -51,6 +51,7 @@ export default function GameClient() {
                 if (gameCopy.isGameOver()) {
                     setGameOver({ isGameOver: true, reason: getGameOverReason(gameCopy) });
                 }
+                return result;
             } else {
                  toast({
                     title: "Invalid Move",
@@ -58,12 +59,12 @@ export default function GameClient() {
                     variant: "destructive",
                 });
             }
-            return result;
+            return null;
         } catch (error) {
-            console.error("Invalid move:", error);
-             toast({
+            // This happens when the move is invalid. We can safely ignore the error and show a toast.
+            toast({
                 title: "Invalid Move",
-                description: "The move could not be processed. Please try again.",
+                description: "You can't make that move.",
                 variant: "destructive",
             });
             return null;
