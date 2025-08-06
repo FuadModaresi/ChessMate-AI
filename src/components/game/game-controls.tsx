@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { HardHat, Repeat, Swords, Users } from 'lucide-react';
+import { HardHat, Repeat, Swords, Users, Focus } from 'lucide-react';
 import type { Difficulty } from '@/app/game-client';
 
 interface GameControlsProps {
@@ -11,9 +11,11 @@ interface GameControlsProps {
     difficulty: Difficulty;
     onDifficultyChange: (difficulty: Difficulty) => void;
     isAITurn: boolean;
+    isFocusMode: boolean;
+    onToggleFocusMode: () => void;
 }
 
-export function GameControls({ onNewGame, onSwitchSides, difficulty, onDifficultyChange, isAITurn }: GameControlsProps) {
+export function GameControls({ onNewGame, onSwitchSides, difficulty, onDifficultyChange, isAITurn, onToggleFocusMode, isFocusMode }: GameControlsProps) {
     return (
         <Card className="shadow-lg">
             <CardHeader>
@@ -47,6 +49,12 @@ export function GameControls({ onNewGame, onSwitchSides, difficulty, onDifficult
                             <SelectItem value="Advanced">Advanced</SelectItem>
                         </SelectContent>
                     </Select>
+                </div>
+                <div>
+                    <Button variant="outline" onClick={onToggleFocusMode} className="w-full">
+                        <Focus className="mr-2 h-4 w-4" /> 
+                        {isFocusMode ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+                    </Button>
                 </div>
             </CardContent>
         </Card>

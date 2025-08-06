@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Crown, Swords } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
 
@@ -22,8 +23,10 @@ export default function GameClient() {
     const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
     const [difficulty, setDifficulty] = useState<Difficulty>('Beginner');
     const [gameOver, setGameOver] = useState<{isGameOver: boolean; reason: string}>({isGameOver: false, reason: ""});
+    const [isFocusMode, setIsFocusMode] = useState(false);
     
-    const isAITurn = useMemo(() => game.turn() !== playerColor && !gameOver.isGameOver, [game, playerColor, gameOver.isGameOver]);
+    const isPlayerTurn = useMemo(() => game.turn() === playerColor, [game, playerColor]);
+    const isAITurn = useMemo(() => !isPlayerTurn && !gameOver.isGameOver, [isPlayerTurn, gameOver.isGameOver]);
     const fen = useMemo(() => game.fen(), [game]);
     const boardOrientation = useMemo(() => playerColor === 'w' ? 'white' : 'black', [playerColor]);
 
@@ -59,6 +62,7 @@ export default function GameClient() {
         setGame(newGame);
         setHistory([]);
         setGameOver({isGameOver: false, reason: ""});
+        setPlayerColor('w');
     }, []);
     
     const handleDifficultyChange = useCallback(async (newDifficulty: Difficulty) => {
@@ -71,6 +75,10 @@ export default function GameClient() {
         setPlayerColor(prev => prev === 'w' ? 'b' : 'w');
         handleNewGame();
     }, [handleNewGame]);
+
+    const toggleFocusMode = useCallback(() => {
+        setIsFocusMode(prev => !prev);
+    }, []);
 
     useEffect(() => {
         if(isAITurn) {
@@ -91,21 +99,32 @@ export default function GameClient() {
 
     return (
         <>
-            <main className="container mx-auto p-4 min-h-screen flex flex-col items-center justify-center">
-                <header className="text-center mb-8">
-                    <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">ChessMate AI</h1>
-                    <p className="text-muted-foreground mt-2">The ultimate chess challenge powered by GenAI</p>
-                </header>
+            <main className={cn(
+                "container mx-auto p-4 min-h-screen flex flex-col items-center justify-center transition-all duration-300",
+                isFocusMode ? "p-0 md:p-4" : ""
+            )}>
+                {!isFocusMode && (
+                  <header className="text-center mb-8">
+                      <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary">ChessMate AI</h1>
+                      <p className="text-muted-foreground mt-2">The ultimate chess challenge powered by GenAI</p>
+                  </header>
+                )}
                 
-                <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-                    <div className="lg:w-2/3 w-full">
+                <div className={cn(
+                  "w-full flex flex-col gap-8",
+                  !isFocusMode && "max-w-7xl mx-auto lg:flex-row"
+                )}>
+                    <div className={cn(
+                        "w-full transition-all duration-300",
+                        !isFocusMode && "lg:w-2/3"
+                    )}>
                         <Card className="shadow-lg bg-transparent">
                            <CardContent className="p-1 sm:p-2">
                                 <Chessboard
                                     fen={fen}
                                     onMove={makeMove}
                                     orientation={boardOrientation}
-                                    isInteractable={!isAITurn && !gameOver.isGameOver}
+                                    isInteractable={isPlayerTurn && !gameOver.isGameOver}
                                 />
                            </CardContent>
                         </Card>
@@ -115,16 +134,20 @@ export default function GameClient() {
                             </div>
                         )}
                     </div>
-                    <div className="lg:w-1/3 w-full flex flex-col gap-8">
-                        <GameControls 
-                            onNewGame={handleNewGame}
-                            onSwitchSides={handleSwitchSides}
-                            difficulty={difficulty}
-                            onDifficultyChange={handleDifficultyChange}
-                            isAITurn={isAITurn || gameOver.isGameOver}
-                        />
-                        <MoveHistory history={history} />
-                    </div>
+                    {!isFocusMode && (
+                      <div className="lg:w-1/3 w-full flex flex-col gap-8">
+                          <GameControls 
+                              onNewGame={handleNewGame}
+                              onSwitchSides={handleSwitchSides}
+                              difficulty={difficulty}
+                              onDifficultyChange={handleDifficultyChange}
+                              isAITurn={isAITurn || gameOver.isGameOver}
+                              onToggleFocusMode={toggleFocusMode}
+                              isFocusMode={isFocusMode}
+                          />
+                          <MoveHistory history={history} />
+                      </div>
+                    )}
                 </div>
             </main>
 
