@@ -42,7 +42,7 @@ export function Chessboard({ fen, onMove, orientation, isInteractable }: Chessbo
                     viewFiles.map((file, colIndex) => {
                         const square = (file + rank) as Square;
                         const piece = board[ranks.indexOf(rank)][files.indexOf(file)];
-                        const isDark = (files.indexOf(file) + ranks.indexOf(rank)) % 2 !== 0;
+                        const isDark = (colIndex + rowIndex) % 2 !== 0;
 
                         return (
                             <div
