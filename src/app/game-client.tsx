@@ -54,7 +54,7 @@ export default function GameClient() {
             } else {
                  toast({
                     title: "Invalid Move",
-                    description: "The AI returned an invalid move. Please try again.",
+                    description: "The attempted move was invalid.",
                     variant: "destructive",
                 });
             }
@@ -75,7 +75,7 @@ export default function GameClient() {
         setGame(newGame);
         setHistory([]);
         setGameOver({isGameOver: false, reason: ""});
-        setPlayerColor('w');
+        // Keep player color and difficulty
     }, []);
     
     const handleDifficultyChange = useCallback(async (newDifficulty: Difficulty) => {
@@ -97,13 +97,43 @@ export default function GameClient() {
         if(isAITurn) {
             const getAIMove = async () => {
                 try {
-                  const aiMove = await aiOpponentMove({ boardState: game.fen(), difficulty });
-                  if (aiMove) {
-                      makeMove(aiMove);
-                  } else {
+                  const aiResponse = await aiOpponentMove({ boardState: game.fen(), difficulty });
+                  
+                  // Create a temporary game instance to validate moves
+                  const tempGame = new Chess(game.fen());
+                  const validMoves = tempGame.moves({verbose: false});
+                  
+                  let moveMade = false;
+
+                  // 1. Try the AI's best move first, if it's valid
+                  if (aiResponse.bestMove && validMoves.includes(aiResponse.bestMove)) {
+                      if(makeMove(aiResponse.bestMove)) {
+                        moveMade = true;
+                      }
+                  }
+
+                  // 2. If best move fails, try iterating through its list of valid moves
+                  if (!moveMade && aiResponse.validMoves) {
+                    for (const move of aiResponse.validMoves) {
+                      if (validMoves.includes(move)) {
+                        if(makeMove(move)) {
+                           moveMade = true;
+                           break; 
+                        }
+                      }
+                    }
+                  }
+                  
+                  // 3. If all else fails, use a locally generated valid move
+                  if (!moveMade && validMoves.length > 0) {
+                      makeMove(validMoves[0]);
+                      moveMade = true;
+                  }
+
+                  if (!moveMade) {
                     toast({
                         title: "AI Error",
-                        description: "The AI failed to make a move. Please try again.",
+                        description: "The AI failed to make a move. The game cannot continue.",
                         variant: "destructive",
                     });
                   }
