@@ -40,12 +40,22 @@ const aiOpponentMovePrompt = ai.definePrompt({
 
 The current board state in FEN notation is: "{{{boardState}}}"
 
-You must analyze the position carefully and choose the best move. Your thinking process should be guided by the selected difficulty level:
-
 **Difficulty: {{difficulty}}**
 
+**Thinking Process:**
+
+**1. Strategic Analysis (Internal Monologue):**
+*   **Material Advantage:** Who is ahead in material? By how much?
+*   **Positional Advantage:** Who controls the center? Whose pieces are more active? Are there any strong outposts or open files to exploit?
+*   **King Safety:** How safe is my king? How safe is the opponent's king? Are there any immediate threats or potential attacks?
+*   **Opponent's Threats:** What is the opponent's most likely plan or threat? I must respond to it.
+*   **My Plan:** Based on the above, what is my long-term goal? (e.g., attack the king, win material, improve my pawn structure).
+
+**2. Move Selection (Based on Difficulty):**
+Now, based on your analysis and the selected difficulty, choose the best move.
+
 {{#if (eq difficulty "Beginner")}}
-*   **Strategy:** Focus on fundamental principles. Make safe moves. Develop your pieces (bring them out to useful squares). Don't hang your pieces (leave them undefended). Castle your king to safety.
+*   **Strategy:** Focus on fundamental principles. Make safe moves that don't lose pieces. Develop your pieces (bring them out to useful squares). Castle your king to safety.
 *   **Move Selection:** Identify all your legal moves. From that list, pick a simple, safe, and useful developing move. Avoid moves that put your king in danger or lose material for no reason.
 {{/if}}
 
@@ -55,8 +65,8 @@ You must analyze the position carefully and choose the best move. Your thinking 
 {{/if}}
 
 {{#if (eq difficulty "Advanced")}}
-*   **Strategy:** You are a chess grandmaster. Think 4-6 moves ahead or more. Your goal is to out-maneuver your opponent positionally and tactically. Formulate a long-term plan based on the pawn structure and piece imbalances. Calculate variations accurately. Provoke weaknesses in the opponent's position and exploit them. Set up complex tactical combinations.
-*   **Move Selection:** Do a deep analysis of all legal moves. Identify several candidate moves and evaluate them based on strategic goals (e.g., controlling key squares, improving piece coordination, launching an attack). Choose the move that offers the best combination of safety, activity, and long-term potential, even if it involves a temporary sacrifice for a larger gain.
+*   **Strategy:** You are a chess grandmaster. Your goal is to out-maneuver your opponent positionally and tactically. Formulate a long-term plan based on the pawn structure and piece imbalances. Calculate variations accurately. Provoke weaknesses in the opponent's position and exploit them. Set up complex tactical combinations.
+*   **Move Selection:** Do a deep analysis of all legal moves. Identify several candidate moves and evaluate them based on your strategic analysis. Choose the move that offers the best combination of safety, activity, and long-term potential, even if it involves a temporary sacrifice for a larger gain.
 {{/if}}
 
 **Instructions:**
@@ -85,14 +95,22 @@ const aiOpponentMoveFlow = ai.defineFlow(
       
       const {output} = await aiOpponentMovePrompt(input);
 
-      if (output) {
+      if (output && output.bestMove && validMoves.includes(output.bestMove)) {
         // Ensure the returned bestMove is actually valid
-        if (validMoves.includes(output.bestMove)) {
-          return output;
-        }
+        return output;
       }
       
       // Fallback if AI fails or returns an invalid "best" move
+      // If the AI provided a list of valid moves, use the first one from that.
+      if (output && output.validMoves && output.validMoves.length > 0) {
+        for (const move of output.validMoves) {
+            if (validMoves.includes(move)) {
+                return { bestMove: move, validMoves };
+            }
+        }
+      }
+      
+      // If all else fails, use a locally generated valid move.
       return { bestMove: validMoves[0], validMoves: validMoves };
 
     } catch (error) {
