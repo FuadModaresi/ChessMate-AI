@@ -31,7 +31,9 @@ export async function aiOpponentMove(input: AiOpponentMoveInput): Promise<AiOppo
 const aiOpponentMovePrompt = ai.definePrompt({
   name: 'aiOpponentMovePrompt',
   input: {schema: AiOpponentMoveInputSchema},
-  output: {schema: AiOpponentMoveOutputSchema},
+  output: {
+    schema: AiOpponentMoveOutputSchema,
+  },
   prompt: `You are a chess grandmaster AI, playing against a human opponent.
 
 You are playing as the black pieces.
@@ -40,7 +42,8 @@ You are playing at {{difficulty}} difficulty.
 
 Given the current board state in FEN notation: "{{{boardState}}}", generate the best possible chess move in UCI notation for black.
 Consider strategic advantages, piece value, and potential threats.
-Output ONLY the UCI notation, do not include any other explanations.`,
+You must return a valid UCI move. If you cannot determine a move, return an empty string.
+Output ONLY the UCI notation or an empty string, do not include any other explanations.`,
 });
 
 const aiOpponentMoveFlow = ai.defineFlow(
@@ -50,7 +53,15 @@ const aiOpponentMoveFlow = ai.defineFlow(
     outputSchema: AiOpponentMoveOutputSchema,
   },
   async input => {
-    const {output} = await aiOpponentMovePrompt(input);
-    return output ?? '';
+    try {
+      const {output} = await aiOpponentMovePrompt(input);
+      // Ensure we always return a string, even if the model somehow returns null or undefined.
+      return output ?? '';
+    } catch (error) {
+      console.error('Error in aiOpponentMoveFlow:', error);
+      // In case of an error during prompt execution, return an empty string
+      // to avoid crashing the client application.
+      return '';
+    }
   }
 );
